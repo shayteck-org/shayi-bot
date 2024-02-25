@@ -15,19 +15,20 @@ import time
 import requests
 import os
 from dotenv import*
-
+from webdriver_manager.chrome import ChromeDriverManager
+import sqlite3
 
 # Create a new Pyrogram client
 
 load_dotenv("Config.env")
-api_id = os.getenv("api_id")
+api_id =  os.getenv("api_id")
 api_hash = os.getenv("api_hash")
 bot_token = os.getenv("bot_token")
 bot_name = os.getenv("bot_name")
 
 
-app = Client(name=bot_name, api_id=api_id, api_hash=api_hash, bot_token=bot_token)
-
+app = Client('bot', api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+conn = sqlite3.connect('BotDatabase.db')
 ####################################################################################################
 # CONFIGURATIONS
 
@@ -49,11 +50,11 @@ def instagram_download(link, message: Message, client: Client):
         global temp_message
         temp_message = message.reply_text("در حال دانلود...")
         options = Options()
-        options.add_argument('--no-sandbox')
         options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         options.add_experimental_option("excludeSwitches",["enable-automaion"])
-        options.binary_location = '/usr/bin/google-chrome'
-        driver = webdriver.Chrome(service=Service('/usr/bin/chromedriver'),options=options)
         stealth(driver,languages=["en-US","en"],vendor="Google Inc",platform="Linux64",webgl_vendor="Intel Inc",renderer="Intel Iris OpenGL Engine", fix_hairline= True,)
         driver.get("https://snapinsta.app/")
         buttons = driver.find_elements(By.TAG_NAME,"button")
@@ -237,4 +238,6 @@ def message_handler(client: Client, message: Message):
 
 
 # Run the bot
+print("BOT IS ON")
 app.run()
+print("BOT IS OFF")
