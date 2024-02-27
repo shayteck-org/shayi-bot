@@ -22,6 +22,10 @@ from mysql.connector import connect
 # Create a new Pyrogram client
 
 load_dotenv("Config.env")
+dbHost = os.getenv("host")
+dbUser = os.getenv("user")
+dbPassword = os.getenv("password")
+dbDataBase = os.getenv("database")
 api_id =  os.getenv("api_id")
 api_hash = os.getenv("api_hash")
 bot_token = os.getenv("bot_token")
@@ -34,9 +38,9 @@ conn = sqlite3.connect('BotDatabase.db')
 ####################################################################################################
 # CONFIGURATIONS
 connection = connect(
-  host="localhost",
-  user="username",
-  password="password"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword
 )
 
 cursor = connection.cursor()
@@ -45,10 +49,10 @@ connection.commit()
 cursor.close()
 connection.close() 
 connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
 cursor = connection.cursor()
 # cursor.execute("DROP TABLE user")
@@ -81,10 +85,10 @@ connection.close()
 def get_user_id(message):
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         # print(message.text)
@@ -104,10 +108,10 @@ def days_between(d1, d2):
 def addLink(message,linkType):
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )   
         cursor = connection.cursor()
         
@@ -121,10 +125,10 @@ def addLink(message,linkType):
 def updateUsers(message):
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user WHERE telegramID  = %s", (message.from_user.id,))
@@ -143,10 +147,10 @@ def updateUsers(message):
 def getAllUsers():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -161,10 +165,10 @@ def getAllUsers():
 def getWeeklyUsers():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -182,10 +186,10 @@ def getWeeklyUsers():
 def getMonthlyUsers():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -203,10 +207,10 @@ def getMonthlyUsers():
 def getWeeklyNewUsers():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -224,10 +228,10 @@ def getWeeklyNewUsers():
 def getMonthlyNewUsers():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -245,10 +249,10 @@ def getMonthlyNewUsers():
 def checkAdmin(id):
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         print(id)
@@ -274,10 +278,10 @@ def promoteToAdmin(message: Message, client: Client):
             message.reply( "این یوزر از قبل ادمین است")
             return True
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("INSERT INTO admin VALUES (%s);",(id,))
@@ -298,10 +302,10 @@ def removeAdmin(message):
             return False
         if (checkAdmin(id) == True):
             connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
             cursor = connection.cursor()
             cursor.execute("DELETE FROM admin WHERE ID = %s",(id,))
@@ -318,10 +322,10 @@ def removeAdmin(message):
 def getAllAdmins():
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
@@ -350,10 +354,10 @@ def getAllAdmins():
 def sendGlobalMessage(message: Message, client: Client):
     try:
         connection = connect(
-  host="localhost",
-  user="username",
-  password="password",
-  database="downloader"
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
 )
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM user")
