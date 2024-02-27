@@ -97,7 +97,7 @@ def get_user_id(message):
         # Extract the username from the message text
         if user is None:
             return None
-            
+
         return user[0]
     except Exception as e:
         # Handle cases where the username is missing or incorrect
@@ -114,7 +114,7 @@ def addLink(message,linkType):
   database=dbDataBase
 )   
         cursor = connection.cursor()
-        
+
         cursor.execute("INSERT INTO link VALUES (%s, %s,%s);",(message.chat.id,linkType,message.text,))    
         connection.commit()
         cursor.close()     
@@ -174,7 +174,7 @@ def getWeeklyUsers():
         cursor.execute("SELECT * FROM user")
         users= cursor.fetchall()
         weeklyUsers = []
-    
+
         for user in users:
             if days_between(datetime.datetime.now(),user[2])<=7:
                 weeklyUsers.append(user)
@@ -195,7 +195,7 @@ def getMonthlyUsers():
         cursor.execute("SELECT * FROM user")
         users= cursor.fetchall()
         weeklyUsers = []
-    
+
         for user in users:
             if days_between(datetime.datetime.now(),user[2])<=30:
                 weeklyUsers.append(user)
@@ -216,7 +216,7 @@ def getWeeklyNewUsers():
         cursor.execute("SELECT * FROM user")
         users= cursor.fetchall()
         weeklyUsers = []
-    
+
         for user in users:
             if days_between(datetime.datetime.now(),user[1])<=7:
                 weeklyUsers.append(user)
@@ -237,7 +237,7 @@ def getMonthlyNewUsers():
         cursor.execute("SELECT * FROM user")
         users= cursor.fetchall()
         weeklyUsers = []
-    
+
         for user in users:
             if days_between(datetime.datetime.now(),user[1])<=30:
                 weeklyUsers.append(user)
@@ -296,7 +296,7 @@ def promoteToAdmin(message: Message, client: Client):
 def removeAdmin(message):
     try:
         id = get_user_id(message)
-        
+
         if id is None:
             message.reply( "بات ما یوزری با این ای دی ندارد")
             return False
@@ -366,14 +366,14 @@ def sendGlobalMessage(message: Message, client: Client):
             # print(int(user[0]))
             # print(user[3])
             try:
-                
+
                 client.copy_message(int(user[0]),message.from_user.id,message.id)
             except Exception as e:
                 # print(e)
                 pass
         cursor.close()     
         connection.close()  
-        
+
     except Exception as e:
         print(e)
         pass                    
@@ -391,9 +391,9 @@ def youtube_download(link, res, message: Message, client: Client):
 
 
 def instagram_download(link, message: Message, client: Client):
+    global temp_message
     try:
         # OPENING THE WEBPAGE
-        global temp_message
         temp_message[message.from_user.id] = message.reply_text("در حال دانلود...")
         options = Options()
         options.add_argument('--headless')
@@ -439,15 +439,27 @@ def instagram_download(link, message: Message, client: Client):
                     print(filename)
                     open(filename,"wb").write(r.content)
                     if(filename[-3:]=="mp4"):
-                        temp_message[message.from_user.id].delete()
+                        try:
+                            temp_message[message.from_user.id].delete()
+                        except:
+                            pass
                         temp_message[message.from_user.id] = message.reply_text("در حال ارسال...")
                         message.reply_video(filename)
-                        temp_message[message.from_user.id].delete()
+                        try:
+                            temp_message[message.from_user.id].delete()
+                        except:
+                            pass
                     elif(filename[-3:]=="jpg"):
-                        temp_message[message.from_user.id].delete()
+                        try:
+                            temp_message[message.from_user.id].delete()
+                        except:
+                            pass
                         temp_message[message.from_user.id] = message.reply_text("در حال ارسال...")
                         message.reply_photo(filename)
-                        temp_message[message.from_user.id].delete()
+                        try:
+                            temp_message[message.from_user.id].delete()
+                        except:
+                            pass
                     os.remove(filename)
                 except Exception as e:
                     print(e)
@@ -455,23 +467,32 @@ def instagram_download(link, message: Message, client: Client):
                 counter += 1
             i+=1
         if counter==0:
-            temp_message[message.from_user.id].delete()
+            try:
+                temp_message[message.from_user.id].delete()
+            except:
+                pass
             message.reply_text("نمی توان این لینک را دانلود کرد")
         else:
             addLink(message,"Instagram")
-        temp_message[message.from_user.id].delete()
+        try:
+            temp_message[message.from_user.id].delete()
+        except:
+            pass
         print("download done")
         driver.close()
     except Exception as e:
         print(e)
         print("couldn't download this link")
-        temp_message[message.from_user.id].delete()
+        try:
+            temp_message[message.from_user.id].delete()
+        except:
+            pass
     pass
 
 
 def reply_buttons(text, message: Message, client: Client):
     global temp_message
-    test= message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(
+    test = message.reply_text(text=text, reply_markup=InlineKeyboardMarkup(
         [
             [InlineKeyboardButton(text="دانلود از اینستاگرام", callback_data="insta"),
              InlineKeyboardButton(text="دانلود از یوتوب", callback_data="youtube")]
@@ -542,7 +563,7 @@ def adminPanel(client: Client, message: Message):
             ["حذف ادمین"],
             ["پیام همگانی"],
             ["کنسل کردن درخواست"]
-           
+
             ])
             print("test")
             # client.send_message(message.from_user.id,"پنل ادمینی برای شما فعال شد" , reply_markup = keyboard,reply_to_message_id=message.id)
@@ -554,25 +575,36 @@ def adminPanel(client: Client, message: Message):
 def call_back_handler(client: Client, callback: CallbackQuery):
     global temp_message
     if callback.data == "youtube":
-        temp_message[callback.message.chat.id].delete()
+        try:
+            temp_message[callback.message.chat.id].delete()
+        except:
+            pass
         users[callback.from_user.id] = callback.data
         temp_message[callback.message.chat.id] = callback.message.reply_text("لطفا لینک ویدیوی یوتوب رو بفرست🙏")
 
     elif callback.data == "insta":
-        
-        temp_message[callback.message.chat.id].delete()
+        try:
+            temp_message[callback.message.chat.id].delete()
+        except:
+            pass
         users[callback.from_user.id] = callback.data
         temp_message[callback.message.chat.id] = callback.message.reply_text("لطفا لینک ویدیوی اینستاگرام رو بفرست🙏")
 
     elif callback.data == "back":
-        temp_message[callback.message.chat.id].delete()
+        try:
+            temp_message[callback.message.chat.id].delete()
+        except:
+            pass
         users[callback.from_user.id] = ""
         text = "چه کار دیگه ای میتونم برات انجام بدم؟🤔"
         reply_buttons(text, callback.message, client)
 
     else:
 
-        temp_message[callback.message.chat.id].delete()
+        try:
+            temp_message[callback.message.chat.id].delete()
+        except:
+            pass
         ID = callback.from_user.id
         users[ID] = "download"
 
@@ -689,13 +721,19 @@ def message_handler(client: Client, message: Message):
         removeAdmin(message)
         users[message.from_user.id] = ""
     elif users[message.from_user.id] == "insta":
-        temp_message[message.from_user.id].delete()
+        try:
+            temp_message[message.from_user.id].delete()
+        except:
+            pass
         instagram_download(message.text, message, client)
         reply_back_button(text="بازگشت؟",message=message, client=client)
 
     elif users[message.from_user.id] == "youtube":
         if "youtube.com" in message.text or "youtu.be" in message.text:
-            temp_message[message.from_user.id].delete()
+            try:
+                temp_message[message.from_user.id].delete()
+            except:
+                pass
             video_url = message.text
             yt = YouTube(video_url)
             print("Available resolutions:")
