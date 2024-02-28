@@ -1,5 +1,6 @@
 #Importing dependencies
 import datetime
+import json
 from pytube import*
 from pyrogram import*
 from pyrogram.types import*
@@ -42,6 +43,17 @@ connection = connect(
   user=dbUser,
   password=dbPassword
 )
+class SavedLink :
+    def __init__(self,linkType,link):
+        self.linkType = linkType
+        self.link = link
+class AllUserLinks:
+    def __init__(self,telegramID, userName):
+        self.telegramID = telegramID
+        self.userName = userName
+        self.links = []
+        pass
+
 
 cursor = connection.cursor()
 cursor.execute("CREATE DATABASE IF NOT EXISTS downloader") 
@@ -105,6 +117,47 @@ def get_user_id(message):
         return None
 def days_between(d1, d2):
     return ((d1 - d2).total_seconds())/86400 
+def getAllLinks(message , client : Client):
+    try:
+        connection = connect(
+  host=dbHost,
+  user=dbUser,
+  password=dbPassword,
+  database=dbDataBase
+)
+        cursor = connection.cursor()
+        # print(message.text)
+        cursor.execute("SELECT * FROM user ")
+        users=cursor.fetchall()
+        savedlinks = []
+        for user in users :
+            userlinks = {}
+            userlinks["userID"] = user[0]
+            userlinks["username"] = user[3]
+            userlinks["links"] = []
+            # userlinks = AllUserLinks(user[0],user[3])
+            cursor.execute("SELECT * FROM link WHERE telegramID = %s ",(user[0],))
+            mylinks = cursor.fetchall()
+            for link in mylinks:
+                mylink = {}
+                mylink["linkType"] = link[1]
+                mylink["link"] = link[2]
+                userlinks["links"].append(mylink)
+                # mylink = SavedLink(link[1],link[2])
+                # userlinks.links.append(mylink)
+            savedlinks.append(userlinks)
+
+        json_string = json.dumps(savedlinks, indent=4)    
+        print(json_string)
+        with open('links.json', 'w') as outfile:
+            outfile.write(json_string)
+        client.send_document(message.chat.id,open('links.json','rb'))    
+        os.remove('links.json')
+        # Extract the username from the message text
+    except Exception as e:
+        # Handle cases where the username is missing or incorrect
+        print(e)
+
 def addLink(message,linkType):
     try:
         connection = connect(
@@ -483,6 +536,7 @@ def instagram_download(link, message: Message, client: Client):
     except Exception as e:
         print(e)
         print("couldn't download this link")
+        message.reply_text("نمی توان این لینک را دانلود کرد")
         try:
             temp_message[message.from_user.id].delete()
         except:
@@ -558,6 +612,7 @@ def adminPanel(client: Client, message: Message):
             ["تعداد یوزر های فعال ماه گذشته"],
             ["تعداد یوزر های جدید هفته گذشته"],
             ["تعداد یوزر های جدید ماه گذشته"],
+            ["لیست لینک های درخواستی"],
             ["لیست ادمین ها"],
             ["اضافه کردن ادمین"],
             ["حذف ادمین"],
@@ -640,6 +695,11 @@ def message_handler(client: Client, message: Message):
             text += "\n"
             text += str(userNumber)
             message.reply(text)
+    elif (message.text == "لیست لینک های درخواستی"):
+        if(checkAdmin(message.from_user.id) != True):
+            message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
+        else:
+            getAllLinks(message,client)
     elif (message.text == "تعداد یوزر های فعال هفته گذشته"):
         if(checkAdmin(message.from_user.id) != True):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
