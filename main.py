@@ -1,9 +1,22 @@
 # Importing dependencies
+import os
+import time
 import datetime
 import json
-from pytube import *
-from pyrogram import *
-from pyrogram.types import *
+
+import requests
+
+from pytube import YouTube
+
+from pyrogram import Client, filters
+from pyrogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery,
+    ReplyKeyboardMarkup,
+)
+
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -11,15 +24,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium_stealth import stealth
-from selenium import *
-from selenium.webdriver.common.keys import Keys
-import time
-import requests
-import os
-from dotenv import *
 from webdriver_manager.chrome import ChromeDriverManager
+
 import sqlite3
 from mysql.connector import connect
+
 # Create a new Pyrogram client
 
 from constants import (
