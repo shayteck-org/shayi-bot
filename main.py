@@ -36,9 +36,8 @@ from constants import (
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 conn = sqlite3.connect("BotDatabase.db")
 ####################################################################################################
-CONFIGURATIONSconnection = connect(
-    host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD
-)
+# CONFIGURATIONS
+connection = connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD)
 
 
 class SavedLink:
