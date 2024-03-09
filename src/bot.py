@@ -57,7 +57,7 @@ def start_handler(client: Client, message: Message):
 @app.on_message(filters.command("adminpanel"))
 def adminPanel(client: Client, message: Message):
     try:
-        if checkAdmin(message.chat.id) != True:
+        if not checkAdmin(message.chat.id):
             message.reply("only admins can use this command")
         else:
             #     temp_message[message.from_user.id] = message.reply_text(text="پنل ادمینی برای شما فعال شد", reply_markup=InlineKeyboardMarkup(
@@ -99,7 +99,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
     if callback.data == "youtube":
         try:
             temp_message[callback.message.chat.id].delete()
-        except:
+        except Exception:
             pass
         users[callback.from_user.id] = callback.data
         temp_message[callback.message.chat.id] = callback.message.reply_text(
@@ -109,7 +109,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
     elif callback.data == "insta":
         try:
             temp_message[callback.message.chat.id].delete()
-        except:
+        except Exception:
             pass
         users[callback.from_user.id] = callback.data
         temp_message[callback.message.chat.id] = callback.message.reply_text(
@@ -119,7 +119,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
     elif callback.data == "back":
         try:
             temp_message[callback.message.chat.id].delete()
-        except:
+        except Exception:
             pass
         users[callback.from_user.id] = ""
         text = "چه کار دیگه ای میتونم برات انجام بدم؟🤔"
@@ -128,7 +128,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
     else:
         try:
             temp_message[callback.message.chat.id].delete()
-        except:
+        except Exception:
             pass
         ID = callback.from_user.id
         users[ID] = "download"
@@ -161,7 +161,7 @@ def message_handler(client: Client, message: Message):
     global temp_message
     updateUsers(message)
     if message.text == "تعداد تمام یوزر ها":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getAllUsers())
@@ -170,12 +170,12 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "لیست لینک های درخواستی":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             getAllLinks(message, client)
     elif message.text == "تعداد یوزر های فعال هفته گذشته":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getWeeklyUsers())
@@ -184,7 +184,7 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "تعداد یوزر های فعال ماه گذشته":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getMonthlyUsers())
@@ -193,7 +193,7 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "تعداد یوزر های جدید هفته گذشته":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getWeeklyNewUsers())
@@ -202,7 +202,7 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "تعداد یوزر های جدید ماه گذشته":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getMonthlyNewUsers())
@@ -211,7 +211,7 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "تعداد یوزر های جدید ماه گذشته":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             userNumber = len(getMonthlyNewUsers())
@@ -220,19 +220,19 @@ def message_handler(client: Client, message: Message):
             text += str(userNumber)
             message.reply(text)
     elif message.text == "لیست ادمین ها":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             text = getAllAdmins()
             message.reply(text)
     elif message.text == "اضافه کردن ادمین":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             message.reply("لطفا آی دی تلگرام کسی که می خواهید ادمین کنید را وارد کنید")
             users[message.from_user.id] = "addAdmin"
     elif message.text == "حذف ادمین":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             message.reply(
@@ -240,7 +240,7 @@ def message_handler(client: Client, message: Message):
             )
             users[message.from_user.id] = "removeAdmin"
     elif message.text == "پیام همگانی":
-        if checkAdmin(message.from_user.id) != True:
+        if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
         else:
             message.reply("پیام بعدی شما به همه ی یوزر ها خواهد رفت")
@@ -259,7 +259,7 @@ def message_handler(client: Client, message: Message):
     elif users[message.from_user.id] == "insta":
         try:
             temp_message[message.from_user.id].delete()
-        except:
+        except Exception:
             pass
         instagram_download(message.text, message, client)
         reply_back_button(text="بازگشت؟", message=message, client=client)
@@ -268,7 +268,7 @@ def message_handler(client: Client, message: Message):
         if "youtube.com" in message.text or "youtu.be" in message.text:
             try:
                 temp_message[message.from_user.id].delete()
-            except:
+            except Exception:
                 pass
             video_url = message.text
             yt = YouTube(video_url)

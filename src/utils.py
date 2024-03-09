@@ -80,25 +80,25 @@ def getAllLinks(message, client: Client):
         # print(message.text)
         cursor.execute("SELECT * FROM user ")
         users = cursor.fetchall()
-        savedlinks = []
+        saved_links = []
         for user in users:
-            userlinks = {}
-            userlinks["userID"] = user[0]
-            userlinks["username"] = user[3]
-            userlinks["links"] = []
-            # userlinks = AllUserLinks(user[0],user[3])
+            user_links = {}
+            user_links["userID"] = user[0]
+            user_links["username"] = user[3]
+            user_links["links"] = []
+            # user_links = AllUserLinks(user[0],user[3])
             cursor.execute("SELECT * FROM link WHERE telegramID = %s ", (user[0],))
-            mylinks = cursor.fetchall()
-            for link in mylinks:
-                mylink = {}
-                mylink["linkType"] = link[1]
-                mylink["link"] = link[2]
-                userlinks["links"].append(mylink)
-                # mylink = SavedLink(link[1],link[2])
-                # userlinks.links.append(mylink)
-            savedlinks.append(userlinks)
+            my_links = cursor.fetchall()
+            for link in my_links:
+                my_link = {}
+                my_link["linkType"] = link[1]
+                my_link["link"] = link[2]
+                user_links["links"].append(my_link)
+                # my_link = SavedLink(link[1],link[2])
+                # user_links.links.append(my_link)
+            saved_links.append(user_links)
 
-        json_string = json.dumps(savedlinks, indent=4)
+        json_string = json.dumps(saved_links, indent=4)
         print(json_string)
         with open("links.json", "w") as outfile:
             outfile.write(json_string)
@@ -318,7 +318,7 @@ def promoteToAdmin(message: Message, client: Client):
         if id is None:
             message.reply("بات ما یوزری با این ای دی ندارد")
             return False
-        if checkAdmin(id) == True:
+        if checkAdmin(id):
             message.reply("این یوزر از قبل ادمین است")
             return True
         connection = connect(
@@ -346,7 +346,7 @@ def removeAdmin(message):
         if id is None:
             message.reply("بات ما یوزری با این ای دی ندارد")
             return False
-        if checkAdmin(id) == True:
+        if checkAdmin(id):
             connection = connect(
                 host=MYSQL_HOST,
                 user=MYSQL_USER,
@@ -509,7 +509,7 @@ def instagram_download(link, message: Message, client: Client):
                     if filename[-3:] == "mp4":
                         try:
                             temp_message[message.from_user.id].delete()
-                        except:
+                        except Exception:
                             pass
                         temp_message[message.from_user.id] = message.reply_text(
                             "در حال ارسال..."
@@ -517,12 +517,12 @@ def instagram_download(link, message: Message, client: Client):
                         message.reply_video(filename)
                         try:
                             temp_message[message.from_user.id].delete()
-                        except:
+                        except Exception:
                             pass
                     elif filename[-3:] == "jpg":
                         try:
                             temp_message[message.from_user.id].delete()
-                        except:
+                        except Exception:
                             pass
                         temp_message[message.from_user.id] = message.reply_text(
                             "در حال ارسال..."
@@ -530,7 +530,7 @@ def instagram_download(link, message: Message, client: Client):
                         message.reply_photo(filename)
                         try:
                             temp_message[message.from_user.id].delete()
-                        except:
+                        except Exception:
                             pass
                     os.remove(filename)
                 except Exception as e:
@@ -541,14 +541,14 @@ def instagram_download(link, message: Message, client: Client):
         if counter == 0:
             try:
                 temp_message[message.from_user.id].delete()
-            except:
+            except Exception:
                 pass
             message.reply_text("نمی توان این لینک را دانلود کرد")
         else:
             addLink(message, "Instagram")
         try:
             temp_message[message.from_user.id].delete()
-        except:
+        except Exception:
             pass
         print("download done")
         driver.close()
@@ -558,7 +558,7 @@ def instagram_download(link, message: Message, client: Client):
         message.reply_text("نمی توان این لینک را دانلود کرد")
         try:
             temp_message[message.from_user.id].delete()
-        except:
+        except Exception:
             pass
     pass
 
