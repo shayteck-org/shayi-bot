@@ -1,3 +1,5 @@
+import logging
+
 from pyrogram import Client, filters
 from pyrogram.types import (
     Message,
@@ -14,7 +16,7 @@ from utils import (
     instagram_download,
     reply_buttons,
     reply_back_button,
-    updateUsers,
+    update_users,
     checkAdmin,
     getAllUsers,
     getAllLinks,
@@ -33,18 +35,23 @@ import os
 
 from constants import API_ID, API_HASH, BOT_TOKEN
 
+logger = logging.getLogger(__name__)
+
+
 users = {}
 links = {}
 qualities = {}
-
+temp_message = dict()
 
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 
 @app.on_message(filters.command("start"))
 def start_handler(client: Client, message: Message):
-    updateUsers(message)
-    print("started by " + message.from_user.username)
+    logger.info(f"Bot started by {message.from_user.username}")
+
+    update_users(message)
+
     global temp_message
     users[message.from_user.id] = "start"
     text = (
@@ -85,7 +92,6 @@ def adminPanel(client: Client, message: Message):
                     ["کنسل کردن درخواست"],
                 ]
             )
-            print("test")
             # client.send_message(message.from_user.id,"پنل ادمینی برای شما فعال شد" , reply_markup = keyboard,reply_to_message_id=message.id)
             message.reply("پنل ادمینی برای شما فعال شد", reply_markup=keyboard)
     except Exception as e:
@@ -153,13 +159,16 @@ def call_back_handler(client: Client, callback: CallbackQuery):
         reply_back_button(text="بازگشت؟", message=callback.message, client=client)
 
         os.remove(path=path)
-        print(path, "has been successfully deleted.")
+
+        logger.info(f"{path} has been successfully deleted.")
 
 
 @app.on_message(filters.text)
 def message_handler(client: Client, message: Message):
     global temp_message
-    updateUsers(message)
+
+    update_users(message)
+
     if message.text == "تعداد تمام یوزر ها":
         if not checkAdmin(message.from_user.id):
             message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")

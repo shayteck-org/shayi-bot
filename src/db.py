@@ -65,7 +65,8 @@ def create_tables():
 
 
 def read_db():
-    logger.info("Connecting to the database...")
+    logger.info("Reading the database...")
+
     connection = connect(
         host=MYSQL_HOST,
         user=MYSQL_USER,

@@ -16,7 +16,8 @@ if __name__ == "__main__":
     create_tables()
     read_db()
 
-    print(getWeeklyUsers())
+    for user in getWeeklyUsers():
+        logger.info(f"User: {user}")
 
     logger.info("Starting Bot...")
 

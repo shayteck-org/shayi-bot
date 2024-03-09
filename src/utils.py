@@ -1,4 +1,4 @@
-# Importing dependencies
+import logging
 import os
 import time
 import datetime
@@ -23,6 +23,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from mysql.connector import connect
 
 from constants import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
+
+logger = logging.getLogger(__name__)
 
 temp_message = dict()
 
@@ -136,7 +138,7 @@ def addLink(message, linkType):
         pass
 
 
-def updateUsers(message):
+def update_users(message):
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -145,10 +147,12 @@ def updateUsers(message):
             database=MYSQL_DATABASE,
         )
         cursor = connection.cursor()
+
         cursor.execute(
             "SELECT * FROM user WHERE telegramID  = %s", (message.from_user.id,)
         )
         user = cursor.fetchone()
+
         if user is None:
             cursor.execute(
                 "INSERT INTO user VALUES (%s, %s, %s,%s);",
@@ -159,6 +163,8 @@ def updateUsers(message):
                     message.from_user.username,
                 ),
             )
+
+            logger.info(f"User {message.from_user.id} added to the database")
         else:
             cursor.execute(
                 "UPDATE user SET firstMessage = %s WHERE telegramID = %s",
@@ -168,12 +174,15 @@ def updateUsers(message):
                 "UPDATE user SET username = %s WHERE telegramID  = %s",
                 (message.from_user.username, message.from_user.id),
             )
+
+            logger.info(f"User {message.from_user.id} updated in the database")
+
         connection.commit()
+
         cursor.close()
         connection.close()
     except Exception as e:
-        print(e)
-        pass
+        logger.error(f"Error updating the user table: {e}")
 
 
 def getAllUsers():
@@ -297,16 +306,16 @@ def checkAdmin(id):
             database=MYSQL_DATABASE,
         )
         cursor = connection.cursor()
-        print(id)
+
         cursor.execute("SELECT * FROM admin WHERE ID = %s", (id,))
         user = cursor.fetchone()
-        print("ok")
-        print(user)
+
         cursor.close()
         connection.close()
-        print("ok")
+
         if user is None:
             return False
+
         return True
     except Exception as e:
         print(e)
@@ -565,6 +574,7 @@ def instagram_download(link, message: Message, client: Client):
 
 def reply_buttons(text, message: Message, client: Client):
     global temp_message
+
     test = message.reply_text(
         text=text,
         reply_markup=InlineKeyboardMarkup(
@@ -580,11 +590,7 @@ def reply_buttons(text, message: Message, client: Client):
             ]
         ),
     )
-    # print(test)
-    # test.delete()
     temp_message[message.from_user.id] = test
-    print(message.from_user.id)
-    # print(temp_message[message.from_user.id])
 
 
 def reply_back_button(text, message: Message, client: Client):
