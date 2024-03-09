@@ -48,7 +48,7 @@ app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 @app.on_message(filters.command("start"))
 def start_handler(client: Client, message: Message):
-    logger.info(f"Bot started by {message.from_user.username}")
+    logger.info(f"Bot started by {message.from_user.id}")
 
     update_users(message)
 
@@ -66,6 +66,8 @@ def adminPanel(client: Client, message: Message):
     try:
         if not checkAdmin(message.chat.id):
             message.reply("only admins can use this command")
+
+            logger.warn(f"{message.from_user.id} tried to access admin panel")
         else:
             #     temp_message[message.from_user.id] = message.reply_text(text="پنل ادمینی برای شما فعال شد", reply_markup=InlineKeyboardMarkup(
             # [
@@ -95,8 +97,7 @@ def adminPanel(client: Client, message: Message):
             # client.send_message(message.from_user.id,"پنل ادمینی برای شما فعال شد" , reply_markup = keyboard,reply_to_message_id=message.id)
             message.reply("پنل ادمینی برای شما فعال شد", reply_markup=keyboard)
     except Exception as e:
-        print(e.with_traceback)
-        print(e)
+        logger.error(e)
 
 
 @app.on_callback_query()
