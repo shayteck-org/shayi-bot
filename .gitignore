@@ -140,5 +140,6 @@ desktop.ini
 # Database
 *.db
 
-# Old Bot
-old_bot/
+# Session files
+bot.session
+bot.session.journal
