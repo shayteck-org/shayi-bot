@@ -1,6 +1,5 @@
 from bot import app
 
-import sqlite3
 from mysql.connector import connect
 
 from constants import MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
@@ -8,7 +7,7 @@ from utils import getWeeklyUsers
 
 ####################################################################################################
 # CONFIGURATIONS
-conn = sqlite3.connect("BotDatabase.db")
+
 connection = connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD)
 
 
