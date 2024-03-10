@@ -27,7 +27,7 @@ class ColoredFormatter(logging.Formatter):
 def configure_logger():
     logger_handlers = [
         logging.StreamHandler(),
-        logging.FileHandler("dreaming-bot.log"),
+        logging.FileHandler("downloader-bot.log"),
     ]
 
     for handler in logger_handlers:

@@ -1,8 +1,7 @@
 import logging
 from bot import app
 
-from db import create_db, create_tables, read_db
-from utils import getWeeklyUsers
+from db import create_db, create_tables, read_db, get_weekly_users
 from logger import configure_logger
 
 
@@ -16,7 +15,7 @@ if __name__ == "__main__":
     create_tables()
     read_db()
 
-    for user in getWeeklyUsers():
+    for user in get_weekly_users():
         logger.info(f"User: {user}")
 
     logger.info("Starting Bot...")
