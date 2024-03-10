@@ -143,3 +143,6 @@ desktop.ini
 # Session files
 bot.session
 bot.session.journal
+
+# mp4
+*.mp4
