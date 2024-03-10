@@ -27,22 +27,37 @@ temp_message = dict()
 
 
 def youtube_download(link, res, message: Message, client: Client):
+    logger.debug(f"Downloading youtube video from link: {link}")
+
     video_url = link
     yt = YouTube(video_url)
     title = yt.title
 
     selected_stream = yt.streams.filter(res=res, progressive=True).first()
+
     sent_message = message.reply_text("در حال دانلود...")
+
+    logger.debug(f"Downloading video with title: {title}")
+
     selected_stream.download()
+
+    logger.debug(f"Downloaded the video with title: {title}")
+
     sent_message.delete()
+
     return title
 
 
 def instagram_download(link, message: Message, client: Client):
+    logger.debug(f"Downloading instagram video from link: {link}")
+
     global temp_message
     try:
         # OPENING THE WEBPAGE
         temp_message[message.from_user.id] = message.reply_text("در حال دانلود...")
+
+        logger.debug("Starting the web driver...")
+
         options = Options()
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
@@ -60,14 +75,21 @@ def instagram_download(link, message: Message, client: Client):
             renderer="Intel Iris OpenGL Engine",
             fix_hairline=True,
         )
+
+        logger.debug("Web driver has started.")
+        logger.debug("Opening the webpage...")
+
         driver.get("https://snapinsta.app/")
+
+        logger.debug("Webpage has opened.")
+
         buttons = driver.find_elements(By.TAG_NAME, "button")
         for button in buttons:
             classname = button.get_dom_attribute("class")
-            print(classname)
             if classname == "fc-button fc-cta-consent fc-primary-button":
                 button.click()
                 break
+
         time.sleep(2)
 
         # target username
@@ -94,6 +116,7 @@ def instagram_download(link, message: Message, client: Client):
         for link in links:
             print(i)
             print(link.get_dom_attribute("data-event"))
+
             if link.get_dom_attribute("data-event") == "click_download_btn":
                 try:
                     downloadLink = link.get_dom_attribute("href")
