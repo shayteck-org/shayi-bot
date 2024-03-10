@@ -34,111 +34,155 @@ def days_between(d1, d2):
 def create_db():
     logger.info("Creating database if not exists...")
 
-    connection = connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD)
-    cursor = connection.cursor()
+    try:
+        connection = connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_PASSWORD)
+        cursor = connection.cursor()
 
-    cursor.execute("CREATE DATABASE IF NOT EXISTS downloader")
-    connection.commit()
+        cursor.execute("CREATE DATABASE IF NOT EXISTS downloader")
+        connection.commit()
 
-    cursor.close()
-    connection.close()
+        logger.info("Database created successfully.")
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logger.error(f"Error creating database: {e}")
 
 
 def create_tables():
     logger.info("Creating tables if not exists...")
 
-    connection = connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE,
-    )
-    cursor = connection.cursor()
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+        )
+        cursor = connection.cursor()
 
-    # cursor.execute("DROP TABLE user")
-    # cursor.execute("DROP TABLE userData")
-    # cursor.execute("DROP TABLE admin")
-    # cursor.execute("DROP TABLE savedFile")
-
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS user (
-                telegramID BIGINT,
-                firstMessage TIMESTAMP,
-                lastMessage TIMESTAMP,
-                userName TEXT
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS user (
+                    telegramID BIGINT,
+                    firstMessage TIMESTAMP,
+                    lastMessage TIMESTAMP,
+                    userName TEXT
+                )
+            """
+        )
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS admin (
+                ID BIGINT
             )
-        """
-    )
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS admin (
-            ID BIGINT
+            """
         )
-        """
-    )
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS link (
-            telegramID BIGINT,
-            linkType TEXT,
-            link TEXT
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS link (
+                telegramID BIGINT,
+                linkType TEXT,
+                link TEXT
+            )
+            """
         )
-        """
-    )
+        connection.commit()
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        logger.info("Tables created successfully.")
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logger.error(f"Error creating tables: {e}")
+
+
+def drop_tables():
+    logger.info("Dropping tables if exists...")
+
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+        )
+        cursor = connection.cursor()
+
+        cursor.execute("DROP TABLE IF EXISTS user")
+        cursor.execute("DROP TABLE IF EXISTS admin")
+        cursor.execute("DROP TABLE IF EXISTS link")
+        connection.commit()
+
+        logger.info("Tables dropped successfully.")
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logger.error(f"Error dropping tables: {e}")
 
 
 def read_db():
     logger.info("Reading the database...")
 
-    connection = connect(
-        host=MYSQL_HOST,
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DATABASE,
-    )
-    cursor = connection.cursor()
-
-    logger.info("User Table:")
-    cursor.execute("SELECT * FROM user")
-    users = cursor.fetchall()
-    for user in users:
-        logger.info(
-            f"User={{telegramID: {user[0]}, firstMessage: {user[1]}, lastMessage: {user[2]}, userName: {user[3]}}}"
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
         )
-    logger.info("Finished reading the user table.")
+        cursor = connection.cursor()
 
-    logger.info("Admin Table:")
-    cursor.execute("SELECT * FROM admin")
-    admins = cursor.fetchall()
-    for admin in admins:
-        logger.info(f"Admin={{ID: {admin[0]}}}")
-    logger.info("Finished reading the admin table.")
+        logger.info("Reading the user table:")
 
-    if len(admins) == 0:
-        cursor.execute("INSERT INTO admin VALUES (%s);", (368783021,))
-        logger.info(
-            "Admin={{ID: 5804331708}} inserted into the admin table as the first admin"
-        )
+        cursor.execute("SELECT * FROM user")
+        users = cursor.fetchall()
 
-    logger.info("Link Table:")
-    cursor.execute("SELECT * FROM link")
-    links = cursor.fetchall()
-    for link in links:
-        logger.info(
-            f"Link={{telegramID: {link[0]}, linkType: {link[1]}, link: {link[2]}}}"
-        )
-    logger.info("Finished reading the link table.")
+        for user in users:
+            logger.info(
+                f"User={{telegramID: {user[0]}, firstMessage: {user[1]}, lastMessage: {user[2]}, userName: {user[3]}}}"
+            )
+        logger.info("Finished reading the user table.")
 
-    # cursor.execute("INSERT INTO user VALUES (%s, %s, %s,%s);",(10000000000,datetime.datetime.now(),datetime.datetime.now(),"@test1",))
+        logger.info("Reading the admin table:")
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        cursor.execute("SELECT * FROM admin")
+        admins = cursor.fetchall()
+
+        for admin in admins:
+            logger.info(f"Admin={{ID: {admin[0]}}}")
+
+        logger.info("Finished reading the admin table.")
+
+        if len(admins) == 0:
+            cursor.execute("INSERT INTO admin VALUES (%s);", (368783021,))
+            logger.info(
+                "Admin={{ID: 368783021}} inserted into the admin table as the first admin"
+            )
+
+        logger.info("Reading the link table:")
+
+        cursor.execute("SELECT * FROM link")
+        links = cursor.fetchall()
+
+        for link in links:
+            logger.info(
+                f"Link={{telegramID: {link[0]}, linkType: {link[1]}, link: {link[2]}}}"
+            )
+
+        logger.info("Finished reading the link table.")
+
+        # cursor.execute("INSERT INTO user VALUES (%s, %s, %s,%s);",(10000000000,datetime.datetime.now(),datetime.datetime.now(),"@test1",))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logger.error(f"Error reading the database: {e}")
 
 
 def get_user_id(message):
+    logger.info(f"Getting the user id for the message: {message.text}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -150,6 +194,11 @@ def get_user_id(message):
 
         cursor.execute("SELECT * FROM user WHERE username = %s", (message.text[1:],))
         user = cursor.fetchone()
+
+        logger.info(f"Fetched user: {user}")
+
+        cursor.close()
+        connection.close()
 
         # Extract the username from the message text
         if user is None:
@@ -165,6 +214,8 @@ def get_user_id(message):
 
 
 def get_all_links(message, client: Client):
+    logger.info(f"Getting all links for the message: {message.text}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -205,6 +256,7 @@ def get_all_links(message, client: Client):
 
         client.send_document(message.chat.id, open("links.json", "rb"))
         os.remove("links.json")
+
         # Extract the username from the message text
     except Exception as e:
         # Handle cases where the username is missing or incorrect
@@ -212,6 +264,8 @@ def get_all_links(message, client: Client):
 
 
 def add_link(message, linkType):
+    logger.info(f"Adding link for the message: {message.text}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -231,6 +285,9 @@ def add_link(message, linkType):
         )
 
         connection.commit()
+
+        logger.info(f"Link added successfully: {message.text}")
+
         cursor.close()
         connection.close()
     except Exception as e:
@@ -238,6 +295,8 @@ def add_link(message, linkType):
 
 
 def update_users(message):
+    logger.info(f"Updating the user table for the message: {message.text}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -285,6 +344,8 @@ def update_users(message):
 
 
 def get_all_users():
+    logger.info("Getting all users from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -298,6 +359,9 @@ def get_all_users():
         users = cursor.fetchall()
 
         connection.commit()
+
+        logger.info("Finished getting all users from db.")
+
         cursor.close()
         connection.close()
 
@@ -307,6 +371,8 @@ def get_all_users():
 
 
 def get_weekly_users():
+    logger.info("Getting weekly users from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -318,6 +384,8 @@ def get_weekly_users():
 
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
+
+        logger.info("Finished getting weekly users from db.")
 
         weeklyUsers = []
 
@@ -334,6 +402,8 @@ def get_weekly_users():
 
 
 def get_monthly_users():
+    logger.info("Getting monthly users from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -345,6 +415,8 @@ def get_monthly_users():
 
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
+
+        logger.info("Finished getting monthly users from db.")
 
         weeklyUsers = []
 
@@ -361,6 +433,8 @@ def get_monthly_users():
 
 
 def get_weekly_new_users():
+    logger.info("Getting weekly new users from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -372,6 +446,8 @@ def get_weekly_new_users():
 
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
+
+        logger.info("Finished getting weekly new users from db.")
 
         weeklyUsers = []
         for user in users:
@@ -387,6 +463,8 @@ def get_weekly_new_users():
 
 
 def get_monthly_new_users():
+    logger.info("Getting monthly new users from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -398,6 +476,8 @@ def get_monthly_new_users():
 
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
+
+        logger.info("Finished getting monthly new users from db.")
 
         weeklyUsers = []
         for user in users:
@@ -413,6 +493,8 @@ def get_monthly_new_users():
 
 
 def check_admin(id):
+    logger.info(f"Checking if the user is an admin: {id}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -437,6 +519,8 @@ def check_admin(id):
 
 
 def get_all_admins():
+    logger.info("Getting all admins from db...")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -449,8 +533,12 @@ def get_all_admins():
         cursor.execute("SELECT * FROM user")
         rows = cursor.fetchall()
 
+        logger.info("Finished getting all users from db.")
+
         cursor.execute("SELECT * FROM admin")
         rows2 = cursor.fetchall()
+
+        logger.info("Finished getting all admins from db.")
 
         text = "ادمین ها"
         text += "\n"
@@ -461,6 +549,8 @@ def get_all_admins():
                     text += " : "
                     text += "@" + user[3]
                     text += "\n"
+
+        logger.info(f"Admins list to be returned: {text}")
 
         cursor.close()
         connection.close()
@@ -473,12 +563,21 @@ def get_all_admins():
 def promote_to_admin(message: Message, client: Client):
     try:
         id = get_user_id(message)
+
+        logger.info(f"Promoting the user to admin: {id}")
+
         if id is None:
             message.reply("بات ما یوزری با این ای دی ندارد")
+
+            logger.info(f"User {id} was not found in db.")
+
             return False
 
         if check_admin(id):
             message.reply("این یوزر از قبل ادمین است")
+
+            logger.info(f"User {id} is already an admin.")
+
             return True
 
         connection = connect(
@@ -491,6 +590,8 @@ def promote_to_admin(message: Message, client: Client):
 
         cursor.execute("INSERT INTO admin VALUES (%s);", (id,))
         connection.commit()
+
+        logger.info(f"User {id} was promoted to admin.")
 
         cursor.close()
         connection.close()
@@ -506,8 +607,13 @@ def remove_admin(message):
     try:
         id = get_user_id(message)
 
+        logger.info(f"Removing the user {id} from admin.")
+
         if id is None:
             message.reply("بات ما یوزری با این ای دی ندارد")
+
+            logger.info(f"User {id} was not found in db.")
+
             return False
 
         if check_admin(id):
@@ -522,6 +628,8 @@ def remove_admin(message):
             cursor.execute("DELETE FROM admin WHERE ID = %s", (id,))
             connection.commit()
 
+            logger.info(f"User {id} was removed from admin.")
+
             cursor.close()
             connection.close()
 
@@ -531,12 +639,16 @@ def remove_admin(message):
 
         message.reply("این یوزر ادمین نیست")
 
+        logger.info(f"User {id} is not an admin.")
+
         return True
     except Exception as e:
         logger.error(f"Error in remove_admin: {e}")
 
 
 def send_global_message(message: Message, client: Client):
+    logger.info(f"Sending global message: {message.text}")
+
     try:
         connection = connect(
             host=MYSQL_HOST,
@@ -549,11 +661,15 @@ def send_global_message(message: Message, client: Client):
         cursor.execute("SELECT * FROM user")
         users = cursor.fetchall()
 
+        logger.info(f"Sending message to {len(users)} users")
+
         for user in users:
             try:
                 client.copy_message(int(user[0]), message.from_user.id, message.id)
             except Exception as e:
                 logger.error(f"Error in send_global_message while copying message: {e}")
+
+        logger.info("Finished sending global message.")
 
         cursor.close()
         connection.close()

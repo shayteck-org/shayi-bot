@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
+    logger.info("Starting Configurations...")
     configure_logger()
 
     create_db()
