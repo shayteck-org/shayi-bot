@@ -109,6 +109,7 @@ def drop_tables():
         cursor.execute("DROP TABLE IF EXISTS user")
         cursor.execute("DROP TABLE IF EXISTS admin")
         cursor.execute("DROP TABLE IF EXISTS link")
+
         connection.commit()
 
         logger.info("Tables dropped successfully.")
@@ -249,6 +250,11 @@ def get_all_links(message, client: Client):
 
             saved_links.append(user_links)
 
+        for user_links in saved_links:
+            logger.info(f"User: {user_links['username']}")
+            for link in user_links["links"]:
+                logger.info(f"Link: {link['link']}")
+
         json_string = json.dumps(saved_links, indent=4)
 
         with open("links.json", "w") as outfile:
@@ -387,16 +393,19 @@ def get_weekly_users():
 
         logger.info("Finished getting weekly users from db.")
 
-        weeklyUsers = []
+        weekly_users = []
 
         for user in users:
             if days_between(datetime.datetime.now(), user[2]) <= 7:
-                weeklyUsers.append(user)
+                weekly_users.append(user)
+
+        for user in weekly_users:
+            logger.info(f"User: {user}")
 
         cursor.close()
         connection.close()
 
-        return weeklyUsers
+        return weekly_users
     except Exception as e:
         logger.error(f"Error getting weekly users: {e}")
 
@@ -418,16 +427,19 @@ def get_monthly_users():
 
         logger.info("Finished getting monthly users from db.")
 
-        weeklyUsers = []
+        monthly_users = []
 
         for user in users:
             if days_between(datetime.datetime.now(), user[2]) <= 30:
-                weeklyUsers.append(user)
+                monthly_users.append(user)
+
+        for user in monthly_users:
+            logger.info(f"User: {user}")
 
         cursor.close()
         connection.close()
 
-        return weeklyUsers
+        return monthly_users
     except Exception as e:
         logger.error(f"Error getting monthly users: {e}")
 
@@ -449,15 +461,18 @@ def get_weekly_new_users():
 
         logger.info("Finished getting weekly new users from db.")
 
-        weeklyUsers = []
+        weekly_users = []
         for user in users:
             if days_between(datetime.datetime.now(), user[1]) <= 7:
-                weeklyUsers.append(user)
+                weekly_users.append(user)
+
+        for user in weekly_users:
+            logger.info(f"User: {user}")
 
         cursor.close()
         connection.close()
 
-        return weeklyUsers
+        return weekly_users
     except Exception as e:
         logger.error(f"Error getting weekly users: {e}")
 
@@ -479,15 +494,18 @@ def get_monthly_new_users():
 
         logger.info("Finished getting monthly new users from db.")
 
-        weeklyUsers = []
+        monthly_users = []
         for user in users:
             if days_between(datetime.datetime.now(), user[1]) <= 30:
-                weeklyUsers.append(user)
+                monthly_users.append(user)
+
+        for user in monthly_users:
+            logger.info(f"User: {user}")
 
         cursor.close()
         connection.close()
 
-        return weeklyUsers
+        return monthly_users
     except Exception as e:
         logger.error(f"Error getting monthly new users: {e}")
 
@@ -511,7 +529,11 @@ def check_admin(id):
         connection.close()
 
         if user is None:
+            logger.info(f"User: {id} is not an admin.")
+
             return False
+
+        logger.info(f"User: {user} is an admin.")
 
         return True
     except Exception as e:
@@ -562,21 +584,21 @@ def get_all_admins():
 
 def promote_to_admin(message: Message, client: Client):
     try:
-        id = get_user_id(message)
+        logger.info(f"Promoting the user to admin: {message.from_user.id}")
 
-        logger.info(f"Promoting the user to admin: {id}")
+        user_id = get_user_id(message)
 
-        if id is None:
+        if user_id is None:
+            logger.info(f"User {user_id} was not found in db.")
+
             message.reply("بات ما یوزری با این ای دی ندارد")
-
-            logger.info(f"User {id} was not found in db.")
 
             return False
 
-        if check_admin(id):
-            message.reply("این یوزر از قبل ادمین است")
+        if check_admin(user_id):
+            logger.info(f"User {user_id} is already an admin.")
 
-            logger.info(f"User {id} is already an admin.")
+            message.reply("این یوزر از قبل ادمین است")
 
             return True
 
@@ -588,10 +610,10 @@ def promote_to_admin(message: Message, client: Client):
         )
         cursor = connection.cursor()
 
-        cursor.execute("INSERT INTO admin VALUES (%s);", (id,))
+        cursor.execute("INSERT INTO admin VALUES (%s);", (user_id,))
         connection.commit()
 
-        logger.info(f"User {id} was promoted to admin.")
+        logger.info(f"User {user_id} was promoted to admin.")
 
         cursor.close()
         connection.close()
@@ -605,18 +627,18 @@ def promote_to_admin(message: Message, client: Client):
 
 def remove_admin(message):
     try:
-        id = get_user_id(message)
+        logger.info(f"Removing the user {message.from_user.id} from admin.")
 
-        logger.info(f"Removing the user {id} from admin.")
+        user_id = get_user_id(message)
 
-        if id is None:
+        if user_id is None:
+            logger.info(f"User {user_id} was not found in db.")
+
             message.reply("بات ما یوزری با این ای دی ندارد")
-
-            logger.info(f"User {id} was not found in db.")
 
             return False
 
-        if check_admin(id):
+        if check_admin(user_id):
             connection = connect(
                 host=MYSQL_HOST,
                 user=MYSQL_USER,
@@ -625,10 +647,10 @@ def remove_admin(message):
             )
             cursor = connection.cursor()
 
-            cursor.execute("DELETE FROM admin WHERE ID = %s", (id,))
+            cursor.execute("DELETE FROM admin WHERE ID = %s", (user_id,))
             connection.commit()
 
-            logger.info(f"User {id} was removed from admin.")
+            logger.info(f"User {user_id} was removed from admin.")
 
             cursor.close()
             connection.close()
@@ -637,9 +659,9 @@ def remove_admin(message):
 
             return True
 
-        message.reply("این یوزر ادمین نیست")
+        logger.info(f"User {user_id} is not an admin.")
 
-        logger.info(f"User {id} is not an admin.")
+        message.reply("این یوزر ادمین نیست")
 
         return True
     except Exception as e:

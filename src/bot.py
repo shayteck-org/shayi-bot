@@ -73,9 +73,9 @@ def adminPanel(client: Client, message: Message):
 
     try:
         if not check_admin(message.chat.id):
-            message.reply("only admins can use this command")
-
             logger.warn(f"{message.from_user.id} tried to access admin panel")
+
+            message.reply("only admins can use this command")
         else:
             #     temp_message[message.from_user.id] = message.reply_text(text="پنل ادمینی برای شما فعال شد", reply_markup=InlineKeyboardMarkup(
             # [
@@ -87,6 +87,7 @@ def adminPanel(client: Client, message: Message):
             #     [InlineKeyboardButton(text="اضافه کردن ادمین",callback_data="i")],
             # ]
             # ))
+
             keyboard = ReplyKeyboardMarkup(
                 [
                     ["تعداد تمام یوزر ها"],
@@ -102,15 +103,17 @@ def adminPanel(client: Client, message: Message):
                     ["کنسل کردن درخواست"],
                 ]
             )
+
             # client.send_message(message.from_user.id,"پنل ادمینی برای شما فعال شد" , reply_markup = keyboard,reply_to_message_id=message.id)
+
             message.reply("پنل ادمینی برای شما فعال شد", reply_markup=keyboard)
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Error while accessing admin panel: {e}")
 
 
 @app.on_callback_query()
 def call_back_handler(client: Client, callback: CallbackQuery):
-    logger.info(f"User {callback.from_user.id} has clicked on {callback.data}")
+    user_log(f"User {callback.from_user.id} has clicked on {callback.data}")
 
     global temp_message
 
@@ -121,6 +124,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             logger.error("Error while deleting temp message", e)
 
         users[callback.from_user.id] = callback.data
+
         temp_message[callback.message.chat.id] = callback.message.reply_text(
             "لطفا لینک ویدیوی یوتوب رو بفرست🙏"
         )
@@ -131,6 +135,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             logger.error("Error while deleting temp message", e)
 
         users[callback.from_user.id] = callback.data
+
         temp_message[callback.message.chat.id] = callback.message.reply_text(
             "لطفا لینک ویدیوی اینستاگرام رو بفرست🙏"
         )
@@ -153,7 +158,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
         ID = callback.from_user.id
         users[ID] = "download"
 
-        logger.info(
+        user_log(
             f"User {ID} has selected {callback.data} resolution for YouTube video. Attempting to download..."
         )
 
@@ -192,7 +197,9 @@ def call_back_handler(client: Client, callback: CallbackQuery):
 
         try:
             logger.info(f"Deleting {path}")
+
             os.remove(path=path)
+
             logger.info(f"{path} has been successfully deleted.")
         except Exception as e:
             logger.error(f"Error while deleting {path}", e)
@@ -200,7 +207,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
 
 @app.on_message(filters.text)
 def message_handler(client: Client, message: Message):
-    logger.info(f"User {message.from_user.id} has sent a message: {message.text}")
+    user_log(f"User {message.from_user.id} has sent a message: {message.text}")
 
     global temp_message
 
