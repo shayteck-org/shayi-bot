@@ -4,6 +4,7 @@ import logging
 import requests
 import uuid
 
+from instagrapi import Client as InstaClient
 from pyrogram import Client, filters
 from pyrogram.types import (
     Message,
@@ -487,6 +488,113 @@ def youtube_download(link, res, message: Message, client: Client):
 
 
 def instagram_download(link, message: Message, client: Client):
+
+    try:
+        temp_message[message.from_user.id] = message.reply_text("در حال دانلود...")
+    except Exception as e:
+        message.reply_text("نمی توان این لینک را دانلود کرد")
+
+        try:
+            temp_message[message.from_user.id].delete()
+        except Exception:
+            logger.error(f"Error deleting message: {e}")
+        return
+
+    cl = InstaClient()
+
+    try:
+        res = cl.login("user", "pass")
+
+        if not res:
+            print("Login failed")
+            return
+
+        pk = cl.media_pk_from_url(link)
+
+    except Exception as e:
+        logger.error(f"Error logging in to instagram: {e}")
+
+        message.reply_text("نمی توان این لینک را دانلود کرد")
+
+        try:
+            temp_message[message.from_user.id].delete()
+        except Exception:
+            logger.error(f"Error deleting message: {e}")
+        return
+
+    check = False
+    try:
+        filename_uuid = cl.clip_download(pk)
+        check = True
+    except Exception as e:
+        check = False
+
+    if not check:
+        try:
+            filename_uuid = cl.video_download(pk)
+            check = True
+        except Exception as e:
+            check = False
+
+    if not check:
+        try:
+            filename_uuid = cl.photo_download(pk)
+            check = True
+        except Exception as e:
+            check = False
+
+    if not check:
+        try:
+            filename_uuid = cl.igtv_download(pk)
+            check = True
+        except Exception as e:
+            check = False
+
+    if check:
+        # send the file
+        temp_message[message.from_user.id] = message.reply_text("در حال ارسال...")
+
+        if filename_uuid[-3:] == "mp4":
+            message.reply_video(filename_uuid)
+        elif filename_uuid[-3:] == "jpg":
+            message.reply_photo(filename_uuid)
+        else:
+            message.reply_document(filename_uuid)
+        
+        os.remove(filename_uuid)
+            
+        try:
+            temp_message[message.from_user.id].delete()
+        except Exception as e:
+            logger.error(f"Error deleting message: {e}")
+
+    if not check:
+        try:
+            filename_uuid = cl.album_download(pk)
+            check = True
+
+            for i in filename_uuid:
+                if i[-3:] == "mp4":
+                    message.reply_video(i)
+                elif i[-3:] == "jpg":
+                    message.reply_photo(i)
+                else:
+                    message.reply_document(i)
+
+                os.remove(i)
+                
+            try:
+                temp_message[message.from_user.id].delete()
+            except Exception as e:
+                logger.error(f"Error deleting message: {e}")
+        except Exception as e:
+            check = False
+
+    if not check:
+        message.reply_text("نمی توان این لینک را دانلود کرد")
+
+
+def old_instagram_download(link, message: Message, client: Client):
     logger.debug(f"Downloading instagram video from link: {link}")
 
     global temp_message
