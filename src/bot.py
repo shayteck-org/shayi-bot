@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import requests
+import uuid
 
 from pyrogram import Client, filters
 from pyrogram.types import (
@@ -187,11 +188,12 @@ def call_back_handler(client: Client, callback: CallbackQuery):
                 "با موفقیت دانلود شد، در حال ارسال..."
             )
 
-            special_characters = r'\/:*?"<>|#'
-            path = (
-                "".join(char for char in title if char not in special_characters)
-                + ".mp4"
-            )
+            path = title
+            # special_characters = r'\/:*?"<>|#'
+            # path = (
+            #     "".join(char for char in title if char not in special_characters)
+            #     + ".mp4"
+            # )
 
             logger.info(f"Sending {path} to user {ID}")
 
@@ -461,19 +463,23 @@ def youtube_download(link, res, message: Message, client: Client):
         yt = YouTube(video_url)
         title = yt.title
 
+        filename_uuid = str(uuid.uuid4()) + "mp4"
+
         selected_stream = yt.streams.filter(res=res, progressive=True).first()
 
         logger.debug(f"Downloading video with title: {title}")
 
         sent_message = message.reply_text("در حال دانلود...")
 
-        selected_stream.download()
+        selected_stream.download(filename=filename_uuid)
 
-        logger.debug(f"Downloaded the video with title: {title}")
+        logger.debug(
+            f"Downloaded the video with title: {title} and uuid: {filename_uuid}"
+        )
 
         sent_message.delete()
 
-        return title
+        return filename_uuid
     except Exception as e:
         logger.error(f"Error downloading youtube video: {e}")
 
@@ -569,12 +575,14 @@ def instagram_download(link, message: Message, client: Client):
                     logger.debug(f"Content-Disposition: {content}")
 
                     filename = content[content.find("filename=") + 9 :]
+                    extention = os.path.splitext(filename)[1]
+                    filename_uuid = str(uuid.uuid4()) + extention
 
-                    logger.debug(f"Download Complete. Filename: {filename}")
+                    logger.debug(f"Download Complete. UUID of File is: {filename_uuid}")
 
-                    open(filename, "wb").write(r.content)
+                    open(filename_uuid, "wb").write(r.content)
 
-                    if filename[-3:] == "mp4":
+                    if filename_uuid[-3:] == "mp4":
                         try:
                             temp_message[message.from_user.id].delete()
                         except Exception as e:
@@ -586,14 +594,14 @@ def instagram_download(link, message: Message, client: Client):
                             "در حال ارسال..."
                         )
 
-                        message.reply_video(filename)
+                        message.reply_video(filename_uuid)
 
                         try:
                             temp_message[message.from_user.id].delete()
                         except Exception as e:
                             logger.error(f"Error deleting message: {e}")
 
-                    elif filename[-3:] == "jpg":
+                    elif filename_uuid[-3:] == "jpg":
                         try:
                             temp_message[message.from_user.id].delete()
                         except Exception as e:
@@ -605,7 +613,7 @@ def instagram_download(link, message: Message, client: Client):
                             "در حال ارسال..."
                         )
 
-                        message.reply_photo(filename)
+                        message.reply_photo(filename_uuid)
 
                         logger.debug("Photo has been sent.")
 
@@ -616,7 +624,7 @@ def instagram_download(link, message: Message, client: Client):
 
                     logger.debug("Removing the file...")
 
-                    os.remove(filename)
+                    os.remove(filename_uuid)
 
                     logger.debug("File has been removed.")
 
