@@ -552,6 +552,7 @@ def instagram_download(link, message: Message, client: Client):
 
     if check:
         # send the file
+        filename_uuid = str(filename_uuid)
         temp_message[message.from_user.id] = message.reply_text("در حال ارسال...")
 
         if filename_uuid[-3:] == "mp4":
@@ -573,7 +574,8 @@ def instagram_download(link, message: Message, client: Client):
             filename_uuid = cl.album_download(pk)
             check = True
 
-            for i in filename_uuid:
+            for j in filename_uuid:
+                i = str(j)
                 if i[-3:] == "mp4":
                     message.reply_video(i)
                 elif i[-3:] == "jpg":
