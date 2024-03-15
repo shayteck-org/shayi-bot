@@ -47,6 +47,8 @@ from constants import API_ID, API_HASH, BOT_TOKEN, INSTAUSERNAME, INSTAPASSWORD
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+usernamesInsta = []
+instaCl = None
 
 users = {}
 links = {}
@@ -227,6 +229,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
 
         callback.message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
 
+
 @app.on_message(filters.video | filters.photo)
 def media_handler(client: Client, message: Message):
     user_log(f"User {message.from_user.id} has sent a media")
@@ -246,6 +249,7 @@ def media_handler(client: Client, message: Message):
         logger.error(f"Error while handling media: {e}")
 
         message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
+
 
 @app.on_message(filters.text)
 def message_handler(client: Client, message: Message):
@@ -393,8 +397,7 @@ def message_handler(client: Client, message: Message):
                 users[message.from_user.id] = "removeAdmin"
 
         elif message.text == "پیام همگانی":
-            # if not check_admin(message.from_user.id):
-            if check_admin(message.from_user.id):
+            if not check_admin(message.from_user.id):
                 message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
 
                 logger.warn(
@@ -525,18 +528,23 @@ def instagram_download(link, message: Message, client: Client):
             logger.error(f"Error deleting message: {e}")
         return
 
-    cl = InstaClient()
-
     try:
-        res = cl.login(INSTAUSERNAME, INSTAPASSWORD)
+        global instaCl
+        if instaCl == None:
+            cl = getClientLogin(usernamesInsta)
 
-        if not res:
-            print("Login failed")
-            return
+            if cl == None:
+                logger.error("Login failed")
+                return
+            instaCl = cl
+
+        else:
+            cl = instaCl
 
         pk = cl.media_pk_from_url(link)
 
     except Exception as e:
+        
         logger.error(f"Error logging in to instagram: {e}")
 
         message.reply_text("نمی توان این لینک را دانلود کرد")
@@ -619,6 +627,41 @@ def instagram_download(link, message: Message, client: Client):
 
     if not check:
         message.reply_text("نمی توان این لینک را دانلود کرد")
+
+
+def getClientLogin(usernames: list = None):
+    curent_username = ""
+    try:
+        filename = "src/data/insta_users.txt"
+
+        with open(filename, "r") as file:
+            data = file.readlines()  # each line = 'user pass'
+            if len(data) == len(usernames):
+                return None
+
+            if len(data) > 0:
+                for line in data:
+                    line = line.split()
+                    if len(line) == 2:
+                        if usernames is not None and line[0] in usernames:
+                            continue
+                        cl = InstaClient()
+                        curent_username = line[0]
+                        print(f"Logging in with {line[0]}")
+                        success = cl.login(line[0], line[1])
+                        if success:
+                            return cl
+
+                return None
+            else:
+                return None
+    except Exception as e:
+        logger.error(f"Error getting client login: {e} /user {curent_username}")
+        if usernames is not None:
+            usernames.append(curent_username)
+            return getClientLogin(usernames)
+        else:
+            return getClientLogin([curent_username])
 
 
 def old_instagram_download(link, message: Message, client: Client):
