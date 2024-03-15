@@ -42,7 +42,7 @@ from db import (
 )
 
 from logger import user_log, admin_log
-from constants import API_ID, API_HASH, BOT_TOKEN
+from constants import API_ID, API_HASH, BOT_TOKEN, INSTAUSERNAME, INSTAPASSWORD
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -503,7 +503,7 @@ def instagram_download(link, message: Message, client: Client):
     cl = InstaClient()
 
     try:
-        res = cl.login("user", "pass")
+        res = cl.login(INSTAUSERNAME, INSTAPASSWORD)
 
         if not res:
             print("Login failed")
@@ -560,9 +560,9 @@ def instagram_download(link, message: Message, client: Client):
             message.reply_photo(filename_uuid)
         else:
             message.reply_document(filename_uuid)
-        
+
         os.remove(filename_uuid)
-            
+
         try:
             temp_message[message.from_user.id].delete()
         except Exception as e:
@@ -582,7 +582,7 @@ def instagram_download(link, message: Message, client: Client):
                     message.reply_document(i)
 
                 os.remove(i)
-                
+
             try:
                 temp_message[message.from_user.id].delete()
             except Exception as e:
