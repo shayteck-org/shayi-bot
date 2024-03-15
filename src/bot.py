@@ -78,6 +78,14 @@ def start_handler(client: Client, message: Message):
         logger.error(f"Error while starting the bot: {e}")
 
 
+def resetInstacl():
+    try:
+        global instaCl
+        instaCl = getClientLogin()
+    except Exception as e:
+        logger.error(f"Error while resetting insta client: {e}")
+
+
 @app.on_message(filters.command("adminpanel"))
 def adminPanel(client: Client, message: Message):
     admin_log(f"User {message.from_user.id} has accessed admin panel")
@@ -541,10 +549,20 @@ def instagram_download(link, message: Message, client: Client):
         else:
             cl = instaCl
 
-        pk = cl.media_pk_from_url(link)
-
+        checkreset = False
+        while True:
+            try:
+                pk = cl.media_pk_from_url(link)
+                break
+            except Exception as e:
+                logger.error(f"Error getting pk: {e}")
+                if checkreset:
+                    break
+                checkreset = True
+                resetInstacl()
+                cl = instaCl
     except Exception as e:
-        
+
         logger.error(f"Error logging in to instagram: {e}")
 
         message.reply_text("نمی توان این لینک را دانلود کرد")
