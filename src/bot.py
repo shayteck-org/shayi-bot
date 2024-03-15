@@ -227,6 +227,25 @@ def call_back_handler(client: Client, callback: CallbackQuery):
 
         callback.message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
 
+@app.on_message(filters.video | filters.photo)
+def media_handler(client: Client, message: Message):
+    user_log(f"User {message.from_user.id} has sent a media")
+
+    try:
+        global temp_message
+
+        update_users(message)
+
+        if users[message.from_user.id] == "globalMessage":
+            send_global_message(message, client)
+            users[message.from_user.id] = ""
+            return
+        else:
+            return
+    except Exception as e:
+        logger.error(f"Error while handling media: {e}")
+
+        message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
 
 @app.on_message(filters.text)
 def message_handler(client: Client, message: Message):
@@ -236,6 +255,11 @@ def message_handler(client: Client, message: Message):
         global temp_message
 
         update_users(message)
+
+        if users[message.from_user.id] == "globalMessage":
+            send_global_message(message, client)
+            users[message.from_user.id] = ""
+            return
 
         if message.text == "تعداد تمام یوزر ها":
             if not check_admin(message.from_user.id):
@@ -369,7 +393,8 @@ def message_handler(client: Client, message: Message):
                 users[message.from_user.id] = "removeAdmin"
 
         elif message.text == "پیام همگانی":
-            if not check_admin(message.from_user.id):
+            # if not check_admin(message.from_user.id):
+            if check_admin(message.from_user.id):
                 message.reply("فقط ادمین ها می توانند از این دستور استفاده کنند")
 
                 logger.warn(
