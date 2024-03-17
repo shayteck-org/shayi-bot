@@ -87,7 +87,7 @@ def resetInstacl():
 
 
 @app.on_message(filters.command("adminpanel"))
-def adminPanel(client: Client, message: Message):
+def adminPanel(client: Client, message: Message, back=False):
     admin_log(f"User {message.from_user.id} has accessed admin panel")
 
     try:
@@ -119,13 +119,17 @@ def adminPanel(client: Client, message: Message):
                     ["اضافه کردن ادمین"],
                     ["حذف ادمین"],
                     ["پیام همگانی"],
+                    ["مدیریت یوزر های اینستاگرام"],
                     ["کنسل کردن درخواست"],
                 ]
             )
 
             # client.send_message(message.from_user.id,"پنل ادمینی برای شما فعال شد" , reply_markup = keyboard,reply_to_message_id=message.id)
+            if back:
+                message.reply("بازگشت به پنل ادمین", reply_markup=keyboard)
+            else:
+                message.reply("پنل ادمینی برای شما فعال شد", reply_markup=keyboard)
 
-            message.reply("پنل ادمینی برای شما فعال شد", reply_markup=keyboard)
     except Exception as e:
         logger.error(f"Error while accessing admin panel: {e}")
 
@@ -168,6 +172,10 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             text = "چه کار دیگه ای میتونم برات انجام بدم؟🤔"
 
             reply_buttons(text, callback.message, client)
+        elif callback.data == "deleteinstauser":
+            delete_insta_user(client, callback)
+        elif callback.data == "addinstauser":
+            add_insta_user(client, callback)
         else:
             try:
                 temp_message[callback.message.chat.id].delete()
@@ -255,6 +263,84 @@ def media_handler(client: Client, message: Message):
             return
     except Exception as e:
         logger.error(f"Error while handling media: {e}")
+
+        message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
+
+
+def add_insta_user(client: Client, callback: CallbackQuery):
+    users[callback.from_user.id] = "addinstauser"
+
+    client.send_message(
+        callback.from_user.id,
+        'لطفا یوزر و پسورد اینستاگرام را وارد کنید به فرمت زیر: \n "user pass"',
+    )
+
+
+def delete_insta_user(client: Client, callback: CallbackQuery):
+    users[callback.from_user.id] = "deleteinstauser"
+    filename = "data/insta_users.txt"
+    iusers: list[list[str]] = []
+    with open(filename, "r") as file:
+        data = file.readlines()  # each line = 'user pass'
+        if len(data) > 0:
+            for line in data:
+                line = line.split(" ")
+                iusers.append(line)
+    options = []
+    for i in iusers:
+        options.append([i[0]])
+
+    options.append(["کنسل کردن درخواست"])
+    kb = ReplyKeyboardMarkup(options)
+
+    kb.resize_keyboard = True
+
+    client.send_message(
+        callback.from_user.id,
+        "لطفا نام کاربری یوزر مورد نظر را برای حذف انتخاب کنید",
+        reply_markup=kb,
+    )
+
+
+def manageInstagramUsers(client: Client, message: Message):
+    try:
+        filename = "data/insta_users.txt"
+        iusers: list[list[str]] = []
+        with open(filename, "r") as file:
+            data = file.readlines()  # each line = 'user pass'
+            if len(data) > 0:
+                for line in data:
+                    line = line.split(" ")
+                    iusers.append(line)
+
+        if len(iusers) == 0:
+            message.reply_text("هیچ یوزری وارد نشده است")
+            return
+
+        text = "لیست یوزر های اینستاگرام"
+        text += "\n"
+        for user in iusers:
+            text += user[0] + " : " + user[1]
+            text += "\n\n"
+        message.reply_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="حذف یوزر", callback_data="deleteinstauser"
+                        ),
+                        InlineKeyboardButton(
+                            text="افزودن یوزر", callback_data="addinstauser"
+                        ),
+                    ]
+                ]
+            ),
+        )
+        return
+
+    except Exception as e:
+        logger.error(f"Error while managing instagram users: {e}")
 
         message.reply_text("مشکلی پیش آمده است، لطفا دوباره تلاش کنید.")
 
@@ -415,8 +501,13 @@ def message_handler(client: Client, message: Message):
                 message.reply("پیام بعدی شما به همه ی یوزر ها خواهد رفت")
                 users[message.from_user.id] = "globalMessage"
 
+        elif message.text == "مدیریت یوزر های اینستاگرام":
+            manageInstagramUsers(client, message)
+
         elif message.text == "کنسل کردن درخواست":
             users[message.from_user.id] = ""
+            if check_admin(message.from_user.id):
+                adminPanel(client, message, True)
 
         elif users[message.from_user.id] == "globalMessage":
             send_global_message(message, client)
@@ -480,12 +571,51 @@ def message_handler(client: Client, message: Message):
                 users[message.from_user.id] = "ytquality"
                 links[message.from_user.id] = message.text
                 qualities[message.from_user.id] = resolutions
-
             else:
                 text = "لینک اشتباه است، دوباره وارد کنید."
                 text += "\n \n"
                 text += "بازگشت؟"
                 reply_buttons(text=text, message=message, client=client)
+        elif users[message.from_user.id] == "addinstauser":
+            message.text = message.text.strip()
+            check = message.text.split(" ")
+            if len(check) != 2:
+                message.reply_text("فرمت اشتباه است")
+                return
+            filename = "data/insta_users.txt"
+            with open(filename, "a") as file:
+                file.write(message.text + "\n")
+            message.reply_text("یوزر اضافه شد")
+            users[message.from_user.id] = ""
+
+            manageInstagramUsers(client, message)
+
+        elif users[message.from_user.id] == "deleteinstauser":
+            username = message.text.strip()
+
+            filename = "data/insta_users.txt"
+            iusers: list[str] = []
+            c = False
+            with open(filename, "r") as file:
+                data = file.readlines()
+                if len(data) > 0:
+                    for line in data:
+                        linecheck = line.split(" ")
+                        if linecheck[0] == username:
+                            c = True
+                            continue
+                        iusers.append(line)
+
+            with open(filename, "w") as file:
+                for i in iusers:
+                    file.write(i)
+
+            if c:
+                message.reply_text("یوزر حذف شد")
+                manageInstagramUsers(client, message)
+            else:
+                message.reply_text("یوزر یافت نشد دوباره تلاش کنید")
+
     except Exception as e:
         logger.error(f"Error while handling message: {e}")
 
