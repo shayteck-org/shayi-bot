@@ -8,3 +8,4 @@ selenium-stealth==1.0.6
 TgCrypto==1.2.5
 webdriver-manager==4.0.1
 instagrapi==2.0.3
+Pillow

@@ -650,7 +650,7 @@ def instagram_download(link, message: Message, client: Client):
 def getClientLogin(usernames: list = None):
     curent_username = ""
     try:
-        filename = "src/data/insta_users.txt"
+        filename = "data/insta_users.txt"
 
         with open(filename, "r") as file:
             data = file.readlines()  # each line = 'user pass'

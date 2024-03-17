@@ -1,29 +1,27 @@
-version: '3.8'
+version: '3.10'
 services:
-  db:
-    image: mysql:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: always
+#  db:
+    #image: mysql:latest
+   # environment:
+      #MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+     # MYSQL_DATABASE: ${MYSQL_DATABASE}
+    #  MYSQL_USER: ${MYSQL_USER}
+   #   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  #  volumes:
+ #     - db_data:/var/lib/mysql
+#    restart: always
   app:
     build: .
     ports:
       - "8000:80"
-    depends_on:
-      - db
+    #depends_on:
+     # - db
     environment:
-      MYSQL_HOST: db
+      MYSQL_HOST: localhost
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     restart: always
-
+    network_mode: "host" 
 volumes:
   db_data:
