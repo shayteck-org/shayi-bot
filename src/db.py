@@ -67,6 +67,7 @@ def create_tables():
                     firstMessage TIMESTAMP,
                     lastMessage TIMESTAMP,
                     userName TEXT
+                    state TEXT
                 )
             """
         )
@@ -84,6 +85,11 @@ def create_tables():
             )
             """
         )
+
+        cursor.execute(
+            "UPDATE user SET state = 'start' where state is NULL or state = '';"
+        )
+
         connection.commit()
 
         logger.info("Tables created successfully.")
@@ -319,12 +325,13 @@ def update_users(message):
 
         if user is None:
             cursor.execute(
-                "INSERT INTO user VALUES (%s, %s, %s,%s);",
+                "INSERT INTO user VALUES (%s, %s, %s,%s,%s);",
                 (
                     message.from_user.id,
                     datetime.datetime.now(),
                     datetime.datetime.now(),
                     message.from_user.username,
+                    "start",
                 ),
             )
 
@@ -347,6 +354,89 @@ def update_users(message):
         connection.close()
     except Exception as e:
         logger.error(f"Error updating the user table: {e}")
+
+
+def update_user_state(id, state):
+    logger.info(f"Updating the user state for the user:{id}")
+
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+        )
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "UPDATE user SET state = %s WHERE telegramID = %s",
+            (state, id),
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logger.error(f"Error updating the user state: {e}")
+
+def get_single_user_state(id):
+    logger.info(f"Getting the user state for the user:{id}")
+
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT * FROM user WHERE telegramID = %s", (id,))
+        user = cursor.fetchone()
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return user[4]
+    except Exception as e:
+        logger.error(f"Error getting the user state: {e}")
+
+def get_all_users_state():
+    logger.info("Getting all user state from db...")
+
+    try:
+        connection = connect(
+            host=MYSQL_HOST,
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DATABASE,
+        )
+
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT * FROM user")
+        users = cursor.fetchall()
+
+        connection.commit()
+
+        logger.info("Finished getting all user state from db.")
+
+        cursor.close()
+        connection.close()
+
+        users_state: dict[int, str] = {}
+        for user in users:
+            users_state[user[0]] = user[4]
+
+        return users_state
+    except Exception as e:
+        logger.error(f"Error getting all user state: {e}")
+        r: dict[int, str] = {}
+        return r
 
 
 def get_all_users():

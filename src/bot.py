@@ -39,6 +39,9 @@ from db import (
     remove_admin,
     send_global_message,
     add_link,
+    get_all_users_state,
+    update_user_state,
+    get_single_user_state,
 )
 
 from logger import user_log, admin_log
@@ -50,12 +53,20 @@ logger.setLevel(logging.DEBUG)
 usernamesInsta = []
 instaCl = None
 
-users = {}
+# users = get_all_users_state()
 links = {}
 qualities = {}
 temp_message = dict()
 
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+
+def setUserState(id, state):
+    update_user_state(id, state)
+
+
+def getUserState(id):
+    return get_single_user_state(id)
 
 
 @app.on_message(filters.command("start"))
@@ -66,7 +77,7 @@ def start_handler(client: Client, message: Message):
         update_users(message)
 
         global temp_message
-        users[message.from_user.id] = "start"
+        setUserState(message.from_user.id, "start")
 
         text = (
             "سلام خوش اومدی! \n من میتونم برات از اینستاگرام و یوتوب دانلود کنم😎 \n"
@@ -146,7 +157,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             except Exception as e:
                 logger.error("Error while deleting temp message", e)
 
-            users[callback.from_user.id] = callback.data
+            setUserState(callback.from_user.id, "youtube")
 
             temp_message[callback.message.chat.id] = callback.message.reply_text(
                 "لطفا لینک ویدیوی یوتوب رو بفرست🙏"
@@ -157,7 +168,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             except Exception as e:
                 logger.error("Error while deleting temp message", e)
 
-            users[callback.from_user.id] = callback.data
+            setUserState(callback.from_user.id, "insta")
 
             temp_message[callback.message.chat.id] = callback.message.reply_text(
                 "لطفا لینک ویدیوی اینستاگرام رو بفرست🙏"
@@ -168,7 +179,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             except Exception as e:
                 logger.error("Error while deleting temp message", e)
 
-            users[callback.from_user.id] = ""
+            setUserState(callback.from_user.id, "start")
             text = "چه کار دیگه ای میتونم برات انجام بدم؟🤔"
 
             reply_buttons(text, callback.message, client)
@@ -183,7 +194,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
                 logger.error("Error while deleting temp message", e)
 
             ID = callback.from_user.id
-            users[ID] = "download"
+            setUserState(ID, "download")
 
             user_log(
                 f"User {ID} has selected {callback.data} resolution for YouTube video. Attempting to download..."
@@ -230,6 +241,7 @@ def call_back_handler(client: Client, callback: CallbackQuery):
             except Exception as e:
                 logger.error("Error while deleting sent message", e)
 
+            setUserState(callback.from_user.id, "start")
             reply_back_button(text="بازگشت؟", message=callback.message, client=client)
 
             try:
@@ -255,9 +267,9 @@ def media_handler(client: Client, message: Message):
 
         update_users(message)
 
-        if users[message.from_user.id] == "globalMessage":
+        if getUserState(message.from_user.id) == "globalMessage":
             send_global_message(message, client)
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
             return
         else:
             return
@@ -268,7 +280,7 @@ def media_handler(client: Client, message: Message):
 
 
 def add_insta_user(client: Client, callback: CallbackQuery):
-    users[callback.from_user.id] = "addinstauser"
+    setUserState(callback.from_user.id, "addinstauser")
 
     client.send_message(
         callback.from_user.id,
@@ -277,7 +289,7 @@ def add_insta_user(client: Client, callback: CallbackQuery):
 
 
 def delete_insta_user(client: Client, callback: CallbackQuery):
-    users[callback.from_user.id] = "deleteinstauser"
+    setUserState(callback.from_user.id, "deleteinstauser")
     filename = "data/insta_users.txt"
     iusers: list[list[str]] = []
     with open(filename, "r") as file:
@@ -354,9 +366,9 @@ def message_handler(client: Client, message: Message):
 
         update_users(message)
 
-        if users[message.from_user.id] == "globalMessage":
+        if getUserState(message.from_user.id) == "globalMessage":
             send_global_message(message, client)
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
             return
 
         if message.text == "تعداد تمام یوزر ها":
@@ -475,7 +487,7 @@ def message_handler(client: Client, message: Message):
                 message.reply(
                     "لطفا آی دی تلگرام کسی که می خواهید ادمین کنید را وارد کنید"
                 )
-                users[message.from_user.id] = "addAdmin"
+                setUserState(message.from_user.id, "addAdmin")
 
         elif message.text == "حذف ادمین":
             if not check_admin(message.from_user.id):
@@ -488,7 +500,7 @@ def message_handler(client: Client, message: Message):
                 message.reply(
                     "لطفا آی دی تلگرام کسی که می خواهید از ادمینی برکنار کنید را وارد کنید"
                 )
-                users[message.from_user.id] = "removeAdmin"
+                setUserState(message.from_user.id, "removeAdmin")
 
         elif message.text == "پیام همگانی":
             if not check_admin(message.from_user.id):
@@ -499,29 +511,29 @@ def message_handler(client: Client, message: Message):
                 )
             else:
                 message.reply("پیام بعدی شما به همه ی یوزر ها خواهد رفت")
-                users[message.from_user.id] = "globalMessage"
+                setUserState(message.from_user.id, "globalMessage")
 
         elif message.text == "مدیریت یوزر های اینستاگرام":
             manageInstagramUsers(client, message)
 
         elif message.text == "کنسل کردن درخواست":
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
             if check_admin(message.from_user.id):
                 adminPanel(client, message, True)
 
-        elif users[message.from_user.id] == "globalMessage":
+        elif getUserState(message.from_user.id) == "globalMessage":
             send_global_message(message, client)
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
 
-        elif users[message.from_user.id] == "addAdmin":
+        elif getUserState(message.from_user.id) == "addAdmin":
             promote_to_admin(message, client)
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
 
-        elif users[message.from_user.id] == "removeAdmin":
+        elif getUserState(message.from_user.id) == "removeAdmin":
             remove_admin(message)
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
 
-        elif users[message.from_user.id] == "insta":
+        elif getUserState(message.from_user.id) == "insta":
             try:
                 temp_message[message.from_user.id].delete()
             except Exception as e:
@@ -534,7 +546,7 @@ def message_handler(client: Client, message: Message):
             instagram_download(message.text, message, client)
             reply_back_button(text="بازگشت؟", message=message, client=client)
 
-        elif users[message.from_user.id] == "youtube":
+        elif getUserState(message.from_user.id) == "youtube":
             if "youtube.com" in message.text or "youtu.be" in message.text:
                 try:
                     temp_message[message.from_user.id].delete()
@@ -568,7 +580,7 @@ def message_handler(client: Client, message: Message):
                     text=txt, reply_markup=InlineKeyboardMarkup(resolutions)
                 )
 
-                users[message.from_user.id] = "ytquality"
+                setUserState(message.from_user.id, "ytquality")
                 links[message.from_user.id] = message.text
                 qualities[message.from_user.id] = resolutions
             else:
@@ -576,7 +588,7 @@ def message_handler(client: Client, message: Message):
                 text += "\n \n"
                 text += "بازگشت؟"
                 reply_buttons(text=text, message=message, client=client)
-        elif users[message.from_user.id] == "addinstauser":
+        elif getUserState(message.from_user.id) == "addinstauser":
             message.text = message.text.strip()
             check = message.text.split(" ")
             if len(check) != 2:
@@ -586,11 +598,11 @@ def message_handler(client: Client, message: Message):
             with open(filename, "a") as file:
                 file.write(message.text + "\n")
             message.reply_text("یوزر اضافه شد")
-            users[message.from_user.id] = ""
+            setUserState(message.from_user.id, "start")
 
             manageInstagramUsers(client, message)
 
-        elif users[message.from_user.id] == "deleteinstauser":
+        elif getUserState(message.from_user.id) == "deleteinstauser":
             username = message.text.strip()
 
             filename = "data/insta_users.txt"
@@ -743,7 +755,11 @@ def instagram_download(link, message: Message, client: Client):
         else:
             message.reply_document(filename_uuid)
 
-        os.remove(filename_uuid)
+        try:
+            os.remove(filename_uuid)
+
+        except Exception as e:
+            logger.error(f"Error deleting file: {e}")
 
         try:
             temp_message[message.from_user.id].delete()
@@ -764,8 +780,10 @@ def instagram_download(link, message: Message, client: Client):
                 else:
                     message.reply_document(i)
 
-                os.remove(i)
-
+                try:
+                    os.remove(i)
+                except Exception as e:
+                    logger.error(f"Error deleting file: {e}")
             try:
                 temp_message[message.from_user.id].delete()
             except Exception as e:
@@ -775,6 +793,8 @@ def instagram_download(link, message: Message, client: Client):
 
     if not check:
         message.reply_text("نمی توان این لینک را دانلود کرد")
+    else:
+        setUserState(message.from_user.id, "start")
 
 
 def getClientLogin(usernames: list = None):
