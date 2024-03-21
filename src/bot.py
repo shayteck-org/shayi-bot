@@ -117,7 +117,7 @@ def adminPanel(client: Client, message: Message, back=False):
             #     [InlineKeyboardButton(text="اضافه کردن ادمین",callback_data="i")],
             # ]
             # ))
-
+            setUserState(message.from_user.id, "start")
             keyboard = ReplyKeyboardMarkup(
                 [
                     ["تعداد تمام یوزر ها"],
@@ -269,7 +269,7 @@ def media_handler(client: Client, message: Message):
 
         if getUserState(message.from_user.id) == "globalMessage":
             send_global_message(message, client)
-            setUserState(message.from_user.id, "start")
+            adminPanel(client, message, True)
             return
         else:
             return
@@ -365,11 +365,6 @@ def message_handler(client: Client, message: Message):
         global temp_message
 
         update_users(message)
-
-        if getUserState(message.from_user.id) == "globalMessage":
-            send_global_message(message, client)
-            setUserState(message.from_user.id, "start")
-            return
 
         if message.text == "تعداد تمام یوزر ها":
             if not check_admin(message.from_user.id):
@@ -510,7 +505,14 @@ def message_handler(client: Client, message: Message):
                     f"{message.from_user.id} tried to send a global message without being an admin"
                 )
             else:
-                message.reply("پیام بعدی شما به همه ی یوزر ها خواهد رفت")
+
+                options = [["کنسل کردن درخواست"]]
+                kb = ReplyKeyboardMarkup(options)
+                kb.resize_keyboard = True
+
+                message.reply(
+                    "پیام بعدی شما به همه ی یوزر ها خواهد رفت", reply_markup=kb
+                )
                 setUserState(message.from_user.id, "globalMessage")
 
         elif message.text == "مدیریت یوزر های اینستاگرام":
@@ -523,7 +525,7 @@ def message_handler(client: Client, message: Message):
 
         elif getUserState(message.from_user.id) == "globalMessage":
             send_global_message(message, client)
-            setUserState(message.from_user.id, "start")
+            adminPanel(client, message, True)
 
         elif getUserState(message.from_user.id) == "addAdmin":
             promote_to_admin(message, client)
